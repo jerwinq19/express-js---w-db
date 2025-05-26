@@ -1,10 +1,12 @@
 const express = require('express')
 const sqlite = require('sqlite3').verbose()
+const cors = require('cors')
 const app = express()
 const PORT = 8080
 
 app.use(express.urlencoded({extended: true}))
 app.use(express.json())
+app.use(cors())
 
 const user = [
     { id: 1, name: "Jerwin", age: 19 },
@@ -37,8 +39,6 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 )`)
 
 
-
-
 // get all user 
 app.get('/user', (req, res) => {
     db.all('SELECT * FROM users', [], (err, rows) => {
@@ -57,6 +57,7 @@ app.get('/user/:id', (req, res) => {
     })
 })
 
+// add a user
 app.post('/add-user', (req, res) => {
     const { name , age } = req.body
     db.run('INSERT INTO users (name, age) VALUES (?, ?)', [name, age], (err,row) => {
@@ -64,7 +65,23 @@ app.post('/add-user', (req, res) => {
     })
 })
 
+// delete a user
+app.delete('/user/:id', (req, res) => {
+    const id = req.params.id
 
+    db.run(`DELETE FROM users WHERE id = ?`, id, (err) => {
+        if (err) {
+            console.error(err)
+            return res.status(500).json({ msg: 'Failed to delete user' })
+        }
+
+        if (this.changes === 0) {
+            return res.status(404).json({ msg: 'User not found' })
+        }
+
+        res.status(200).json({ msg: 'User deleted successfully' })
+    })
+})
 
 
 app.listen(PORT, () => {
